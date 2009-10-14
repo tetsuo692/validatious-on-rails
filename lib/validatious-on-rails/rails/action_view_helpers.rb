@@ -18,8 +18,12 @@ module ActionView # :nodoc:
       FIELD_TYPES.each do |field_type|
         define_method :"#{field_type}_with_validation" do |*args|
           args, tail = ::ValidatiousOnRails::Helpers.extract_args!(*args)
-          options = self.attach_validator_for(args.first, args.second, args.extract_options!)
-          self.send :"#{field_type}_without_validation", *((args << options) + tail)
+          # check_box options are the third argument, for all others is last
+          option_position = (field_type == :check_box ? 2 : -1)
+          options = args.delete_at(option_position)
+          options = self.attach_validator_for(args.first, args.second, options)
+          args.insert(option_position, options)
+          self.send :"#{field_type}_without_validation", *(args + tail)
         end
         alias_method_chain field_type, :validation
       end
@@ -43,9 +47,14 @@ module ActionView # :nodoc:
 
       FIELD_TYPES.each do |field_type|
         define_method :"#{field_type}_with_validation" do |*args|
+          RAILS_DEFAULT_LOGGER.debug("TZ1 #{args.inspect}")
           args, tail = ::ValidatiousOnRails::Helpers.extract_args!(*args)
-          options = self.attach_validator_for(args.first, args.second, args.extract_options!)
-          self.send :"#{field_type}_without_validation", *((args << options) + tail)
+          RAILS_DEFAULT_LOGGER.debug("TZ2 #{args.inspect} #{tail.inspect}")
+          option_position = -2
+          options = args.delete_at(option_position)
+          options = self.attach_validator_for(args.first, args.second, options)
+          args.insert(option_position, options)
+          self.send :"#{field_type}_without_validation", *(args + tail)
         end
         alias_method_chain field_type, :validation
       end
@@ -61,7 +70,10 @@ module ActionView # :nodoc:
       FIELD_TYPES.each do |field_type|
         define_method :"#{field_type}_with_validation" do |*args|
           args, tail = ::ValidatiousOnRails::Helpers.extract_args!(*args)
-          options = self.attach_validator_for(args.first, args.second, args.extract_options!)
+          option_position = -2
+          options = args.delete_at(option_position)
+          options = self.attach_validator_for(args.first, args.second, options)
+          args.insert(option_position, options)
           self.send :"#{field_type}_without_validation", *((args << options) + tail)
         end
         alias_method_chain field_type, :validation
